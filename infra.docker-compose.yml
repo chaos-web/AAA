@@ -1,0 +1,67 @@
+version: "3.8"
+services:
+
+  proxy:
+    image: jwilder/nginx-proxy
+    ports:
+      - 80:80
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./default_location:/etc/nginx/vhost.d/default_location
+    networks:
+      - ingress_net
+
+  whoami:
+    image: jwilder/whoami
+    environment:
+      - VIRTUAL_HOST=whoami.localhost
+    networks:
+      - ingress_net
+
+  db:
+    container_name: postgres
+    image: postgres:11.9-alpine
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=postgre
+    # ports:
+    #   - "5432:5432"
+    volumes:
+      - db:/var/lib/postgresql
+    networks:
+      - postgres_net
+
+  pgadmin:
+    container_name: pgsadmin
+    image: dpage/pgadmin4
+    restart: unless-stopped
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=valizadearshia8@gmail.com
+      - PGADMIN_DEFAULT_PASSWORD=root
+      - VIRTUAL_HOST=pgadmin.localhost
+    networks:
+      - postgres_net
+      - ingress_net
+
+  redis:    
+    container_name: redis
+    image: redis:6.2.6-alpine
+    restart: unless-stopped
+    # ports:
+    #   - 6379:6379
+    networks:
+      - redis_net
+
+networks:
+  default:
+  ingress_net:
+    name: ingress_net
+  postgres_net:
+    name: postgres_net
+  redis_net:
+    name: redis_net
+  
+volumes:
+  db:
